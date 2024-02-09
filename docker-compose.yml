@@ -1,0 +1,73 @@
+version: "3.9"
+
+name: vue-laravel
+
+######### Services ###################################
+services:
+  # Server container
+  nginx:
+    build:
+      context: docker/nginx
+      dockerfile: Dockerfile
+    container_name: api-vue-laravel-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT}:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/logs:/var/log/nginx
+    networks:
+      - app-vue-laravel-network
+
+  php:
+    build:
+      args:
+        user: sammy
+        uid: 1000
+      context: docker/php
+      dockerfile: Dockerfile
+    container_name: api-vue-laravel-app
+    restart: unless-stopped
+    working_dir: /var/www/api
+    volumes:
+      - ./api:/var/www/api
+    networks:
+      - app-vue-laravel-network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16.1
+    container_name: api-vue-laravel-db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_vue-laravel_data:/var/lib/postgresql/data
+    networks:
+      - app-vue-laravel-network
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+  # Client container
+  client:
+    build:
+      context: docker/client/
+      dockerfile: Dockerfile
+    ports:
+      - "${CLIENT_PORT}:3000"
+    volumes:
+      - ./client:/var/www/client
+    depends_on:
+      - nginx
+      - php
+
+networks:
+  app-vue-laravel-network:
+    driver: bridge
+
+######### Volumes ###################################
+volumes:
+  postgres_vue-laravel_data:
+    external: true
