@@ -1,143 +1,76 @@
-# Установка Docker и WSL на Windows
+# Описание проекта
 
-## Установка WSL и Ubuntu
+Scaffolding Docker Laravel + Vue 3 (vite)
+Для локальной разработки в докере где фронт и бэк крутятся в одном контейнере
+Актуальная версия PHP 8.3
 
-1. Откройте CMD/Powershell от имени Администратора и введите следующую команду для установки WSL:
+# Как создать проект с нуля самому
 
-```wsl --install
+## Подробности настройки WSL
 
-```
-
-2. После перезагрузки установите дистрибутив Ubuntu и настройте его на WSL2:
-
-```
-   wsl --install -d Ubuntu
-   wsl --set-version ubuntu 2
-```
-
-3. Откройте cmd и введите название выбранного ранее дистрибутива. Вы перейдете в bash linux, где требуется создать пользователя.
-
-## Установка Docker
-
-1. Перейдите на [официальный сайт Docker](https://www.docker.com/products/docker-desktop) и скачайте Docker Desktop для Windows.
-2. Запустите установщик Docker Desktop.
-3. Следуйте инструкциям на экране для завершения установки. Docker Desktop будет запущен после установки. Проверьте, что он запущен, проверив значок Docker в системном трее.
-4. Добавить пользователя в группу docker users командой в PowerShell от имени администратора:
+1. После перехода в файловую систему WSL в Ubuntu\home\user-name\projects,была создана директория проекта
+2. Установка необходимых пакетов для wsl
 
 ```
-net localgroup docker-users "login pc" /ADD
-```
-
-5. Откройте командную строку или PowerShell и введите следующую команду, чтобы проверить, что Docker установлен правильно:
-
-```bash
-docker run hello-world
-```
-
-# Регулировка использования ресурсов докером
-
-Создайте файл .wslconfig в папке пользователя (C:\Users\ [Имя_Пользователя]\ ) и укажите ограничения по использованию ОЗУ, CPU и т.д.
-[Подробнее](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#configure-global-options-with-wslconfig)
-
-```[wsl2]
-    memory=4GB
-```
-
-# Размещение проекта
-
-Для корректной работы Docker и WSL файлы проектов должны находиться в файловой системе linux. Чтобы попасть в файловую систему WSL, можно открыть её в проводнике. Для контроля над файлами установите git и настройте SSH-ключ: [Настройка SSH-ключа](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
-
-```
-sudo apt-get update
+sudo apt update && sudo apt upgrade
+sudo apt install curl
+sudo apt install wget
 sudo apt-get install git
 ```
 
-После этого можно клонировать проекты в файловую систему WSL
-Для корректной работы IDE в WSL рекомендуется дать права на запись всем пользователям(На папку проекта)
-
-```
-sudo chmod -R 777 /folder
-```
-
-### Для управления версиями Node рекомендуется установить [NVM](https://github.com/nvm-sh/nvm#installing-and-updating).
+3. Установка Node и nvm
 
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install node
 ```
 
-```
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-```
+4. Устанавливаем php
 
 ```
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+sudo add-apt-repository ppa:ondrej/php
+sudo apt update
+sudo apt install php8.3 php8.3-cli php8.3-{bz2,curl,mbstring,intl}
+sudo apt install php8.3-fpm
 ```
 
-# IDE
-
-### VS Code
-
-Для запуска VS Code в WSL необходимо установить расширение WSL и запустить из консоли
-
-```code .
+Если у вас стояла более раняя версия
 
 ```
-
-# Аллиасы
-
-### Git Bash
-
-В папке пользователя (C:\Users\ [Имя_Пользователя]\ ) можно создать файл .bash_profile и вставить алиасы... например:
-
-```
-    alias dclogs='winpty docker-compose logs -f'
+sudo a2disconf php8.2-fpm
+sudo apt purge php8.2*
 ```
 
-или указать путь до файла с алиасами
+5. Проверяем версии
 
 ```
-source путь/до/файла
+php -v
+node -v
+npm -v
 ```
 
-### для PowerShell
-
-1. Разрешите политику функций (в PS от имени Администратора):
+6. Устанавливаем composer
 
 ```
-Set-ExecutionPolicy RemoteSigned
+sudo apt install composer
 ```
 
-2. Создайте файл для хранения алиасов:
+7.  Laravel Installer
 
 ```
-New-Item -Path $profile -ItemType file -force
+composer global require laravel/installer
 ```
 
-3. Откройте файл и добавьте в него алиасы:
+После установки вам нужно добавить глобальный каталог Composer в ваш PATH, чтобы вы могли запускать Laravel Installer из любого места.
 
 ```
-notepad $profile
+echo 'export PATH="$PATH:$HOME/.config/composer/vendor/bin"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-Пример алиаса:
+Проверяем
 
 ```
-function Docker-Exec {
-    cd .docker/docker-compose
-    docker compose exec app php @Args
-    cd ..
-    cd ..
-}
-Set-Alias dphp Docker-Exec
+laravel --version
 ```
-
-# Решение возможных проблем
-
-1. Перед установкой WSL удостоверьтесь, что в BIOS включена виртуализация(Настройка зависит от BIOS,по этому гугл в помощь)
-
-2. Затем необходимо установить правило + пакет обновления с [официального сайта Microsoft](https://learn.microsoft.com/ru-ru/windows/wsl/install-manual#step-3---enable-virtual-machine-feature)
-
-3. При разрушительном сбое при попытке установки Ubuntu рекомендуется обновить Microsoft Store
-
-4. v.4.21.0
