@@ -74,3 +74,11 @@ source ~/.bashrc
 ```
 laravel --version
 ```
+
+## Разворачиваем Laravel
+
+1. Переходим в директорию проекта и устанавливаем laravel в папке api
+
+```
+laravel new api
+```
